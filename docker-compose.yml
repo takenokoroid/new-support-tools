@@ -1,0 +1,10 @@
+version: "3"
+services:
+  support-tools:
+    build: .
+    ports:
+      - "3000:3000"
+    container_name: support-tools
+    volumes:
+      - ./support-tools:/usr/src/app/next
+    command: npm run dev
