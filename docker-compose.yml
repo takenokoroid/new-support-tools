@@ -20,4 +20,14 @@ services:
       - AWS_DEFAULT_REGION="ap-northeast-1"
       - AWS_ACCESS_KEY_ID="<your-aws-access-key-id>"
       - AWS_SECRET_ACCESS_KEY="<your-aws-secret-acess-key>"
-    command: /entry.sh /main
+      - DB_DATABASE=hello_flask_dev
+      - DB_USER=hello_flask
+      - DB_PASS=hello_flask
+      - HOST_NAME=old-support-tools_db_1
+    # command: /entry.sh /main
+
+# oldと同一のDBを使うようにnetworkを設定する
+networks:
+  default:
+    name: old-support-tools_default
+    external: true
