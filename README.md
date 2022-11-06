@@ -33,7 +33,15 @@
     └── yarn.lock
 ```
 
-### Nextのライブラリ一覧
+### nodeのライブラリ一覧
+- Nextjs
+- typescript
+- tRPC
+- jest
+- tailwind
+- material-ui
+
+
 
 ### 立ち上げ方法
 
