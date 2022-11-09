@@ -65,6 +65,19 @@ docker compose up --build
 > aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
 > ```
 
+> **注意:** Windowsの場合、改行コードの変更が必要な可能性があり
+>
+>　`exec /entry.sh: no such file or directory` というようなエラーが発生した場合は改行コードを変更する必要があり
+>　詳しくは以下のwebサイトなどを参考のこと
+> [How to fix “exec user process caused: no such file or directory” in Docker on Windows?](https://www.koskila.net/how-to-fix-exec-user-process-caused-no-such-file-or-directory-in-docker-on-windows/)
+>
+
+> **注意:** DBのHOST_NAMEについて
+>
+> 環境によっては以下のケバブケースに書き換える必要がある可能性があります。
+> ```
+> HOST_NAME=old-support-tools-db-1
+> ```
 ### usage
 
 - Nextの表示
