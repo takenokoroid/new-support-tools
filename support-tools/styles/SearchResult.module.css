@@ -1,0 +1,20 @@
+.card__wrapper {
+    padding: 1em 2em;
+    margin: 1em auto;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(255, 152, 79, 0.5);
+}
+
+.card__userwrapper {
+    width: 70%;
+}
+
+.card__deletedwrapper {
+    display: flex;
+    margin: auto;
+    align-items: center;
+}
+
+.card__userid {
+    margin-bottom: 1em;
+}
