@@ -10,3 +10,11 @@ export type Item = {
 };
 
 export type Result = Item[];
+
+export type SearchForm = {
+  userId: string;
+  onIdChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+  onSearch: () => void;
+  validMessage: string;
+};
