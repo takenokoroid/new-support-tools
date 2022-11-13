@@ -1,8 +1,8 @@
 import { Item } from '../../type/lib';
 import css from '../../styles/SearchResult.module.css';
 const SearchResult = ({ result }: { result: Item }) => (
-  <div className={`container mx-auto ${css.card__wrapper} c-flexbox--row w-96`}>
-    <div className={`c-flexbox--column ${css.card__userwrapper}`}>
+  <div className={`container mx-auto ${css.card__wrapper} md:flex flex-rows w-96`}>
+    <div className={`md:flex flex-col ${css.card__userwrapper}`}>
       <div className={`${css.card__userid}`} aria-label={`ユーザIDは${result.user.cgg_id}`}>
         ID : {result.user.cgg_id}
       </div>
