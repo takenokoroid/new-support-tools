@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useSearch } from 'customHooks';
 import SearchResult from './SearchResult';
+import { Item } from 'type/lib';
 const SearchWrapper = () => {
   const { disabled, userId, errorMessage, errorStatus, results, validMessage, onSearch, onIdChange } = useSearch();
   return (
@@ -40,11 +41,13 @@ const SearchWrapper = () => {
               検索
             </button>
           </div>
-          <span role='alert'>{validMessage}</span>
+          <span className='flex items-center font-medium tracking-wide text-red-500 mt-1 ml-1' role='alert'>
+            {validMessage}
+          </span>
         </div>
 
         {!errorStatus ? (
-          results.map((result) => <SearchResult key={result.user.cgg_id} result={result} />)
+          results.map((result: Item) => <SearchResult key={result.user.cgg_id} result={result} />)
         ) : (
           <>{errorMessage}</>
         )}
