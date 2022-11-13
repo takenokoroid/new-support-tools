@@ -13,6 +13,8 @@ paths:
         content:
           application/json:
             schema:
+              required:
+                - id
               type: object
               properties:
                 id:
@@ -37,6 +39,19 @@ paths:
               schema:
                 type: object
                 properties:
+                  errorMessage: 
+                    type: string
+                    example: "データが見つかりません"
+        "422":
+          description: "not id"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage: 
+                    type: string
+                    example: "idが必要です"
         "500":
           description: "server error"
           content:
@@ -44,7 +59,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  errorMessage: 'エラーです'
+                  errorMessage: 
+                  type: string
+                  example: 'エラーです'
 
 
 
