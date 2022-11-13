@@ -27,6 +27,29 @@ services:
       - HOST_NAME=old-support-tools_db_1
     # command: /entry.sh /main
 
+  swagger-editor:
+      image: swaggerapi/swagger-editor
+      container_name: "swagger-editor"
+      ports:
+        - "10081:8080"
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: "swagger-ui"
+    ports:
+      - "10082:8080"
+    volumes:
+      - ./mockServer/openapi.yml:/usr/share/nginx/html/api_reference.yaml
+    environment:
+      API_URL: api_reference.yaml
+  swagger-api:
+    image: stoplight/prism:3
+    container_name: "swagger-api"
+    ports:
+      - "10083:4010"
+    command: mock -h 0.0.0.0 /api_reference.yaml
+    volumes:
+      - ./mockServer/openapi.yml:/api_reference.yaml
+
 # oldと同一のDBを使うようにnetworkを設定する
 networks:
   default:
