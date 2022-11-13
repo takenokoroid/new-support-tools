@@ -31,6 +31,7 @@ export const useSearch = () => {
       console.log('Error', e);
     }
   };
+
   const idValidation = (id: string) => {
     const message = (id: string) => {
       setDisabled(true);
@@ -42,6 +43,7 @@ export const useSearch = () => {
     };
     setValidMessage(message(id));
   };
+
   const onIdChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUserId(e.target.value);
     idValidation(e.target.value);

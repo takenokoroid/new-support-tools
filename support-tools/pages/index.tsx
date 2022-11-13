@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import Header from './components/Header';
 import SearchWrapper from './components/SearchWrapper';
 
-export default function Home() {
+const SupportTool = () => {
   return (
     <div>
       <Head>
@@ -19,4 +19,6 @@ export default function Home() {
       </main>
     </div>
   );
-}
+};
+
+export default SupportTool;
