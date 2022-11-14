@@ -21,6 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        mode: 'cors',
+        cache: 'no-cache',
       },
       body: JSON.stringify({ id: request.id }),
     });
