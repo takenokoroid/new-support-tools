@@ -86,6 +86,15 @@ docker compose up --build
 ```
 npx serverless@2.72.2
 ```
+
+### serverless-nextjsのデストロイ方法
+```
+npx serverless@2.72.2 remove
+```
+
+ただ、全てのリソースがdestoryされないので注意が必要(要チェック)
+
+https://blog.hey3.dev/posts/deploy-nextjs-to-aws
 ### usage
 
 - Nextの表示
