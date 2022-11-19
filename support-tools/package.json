@@ -30,8 +30,6 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
-    "@serverless/cli": "^1.6.0",
-    "@sls-next/serverless-component": "^3.7.0",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "autoprefixer": "^10.4.13",
@@ -39,7 +37,6 @@
     "eslint-plugin-react": "^7.31.10",
     "postcss": "^8.4.18",
     "prettier": "^2.7.1",
-    "serverless": "2.72.2",
     "tailwindcss": "^3.2.1"
   }
 }
