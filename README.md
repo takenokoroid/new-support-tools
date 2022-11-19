@@ -78,6 +78,14 @@ docker compose up --build
 > ```
 > HOST_NAME=old-support-tools-db-1
 > ```
+
+### serverless-nextjsのデプロイ方法
+
+> **注意:** まず、AWSのconfigなどが設定されており、その設定が、デプロイしたい環境になっていることを確認してください
+
+```
+npx serverless@2.72.2
+```
 ### usage
 
 - Nextの表示
