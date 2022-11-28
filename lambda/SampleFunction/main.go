@@ -1,15 +1,17 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	_ "github.com/lib/pq"
 )
 
@@ -22,26 +24,105 @@ type User struct {
 	Name  string `json:"name"`
 }
 
-type Request struct {
+type Id struct {
 	Id string `json:"id"`
+}
+
+// Response Lambdaが返答するデータ
+type Response struct {
+	Service Service `json:"service"`
+	User    User    `json:"user"`
+}
+
+type Item struct {
+	Cgg_id  string `dynamodbav:"cgg_id" json:"cgg_id"`
+	Deleted bool   `dynamodbav:"deleted" json:"deleted"`
+	Name    string `dynamodbav:"name" json:"name"`
 }
 
 var (
 	ErrNoId = errors.New("no id in HTTP response")
 )
 
-// JSONの形のテキストデータをgolangの構造体に変換するための関数
-func ConvertInputDataToStruct(inputs string) (*Request, error) {
-	var req Request
-	err := json.Unmarshal([]byte(inputs), &req)
-	if err != nil {
-		return nil, err
-	}
-	return &req, nil
-}
-
 func handleRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	req, err := ConvertInputDataToStruct(request.Body)
+	fmt.Printf("start")
+
+	// DBと接続するセッションを作る→DB接続
+	sess, err := session.NewSession()
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       err.Error(),
+			StatusCode: 500,
+		}, err
+	}
+
+	db := dynamodb.New(sess)
+
+	fmt.Printf("body:%v", request.Body)
+
+	// リクエストボディのjsonから、ID構造体(DB検索用の構造体)を作成
+	reqBody := request.Body
+	resBodyJSONBytes := ([]byte)(reqBody)
+	id := Id{}
+	if err := json.Unmarshal(resBodyJSONBytes, &id); err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       err.Error(),
+			StatusCode: 500,
+		}, err
+	}
+
+	fmt.Printf("ID:%v", id.Id)
+
+	// 検索条件を用意
+	getParam := &dynamodb.GetItemInput{
+		TableName: aws.String(os.Getenv("TABLE_NAME")),
+		Key: map[string]*dynamodb.AttributeValue{
+			"cgg_id": {
+				S: aws.String(id.Id),
+			},
+		},
+	}
+
+	fmt.Printf("param:%v", getParam)
+
+	// 検索
+	result, err := db.GetItem(getParam)
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       err.Error(),
+			StatusCode: 404,
+		}, err
+	}
+
+	fmt.Printf("result:%v", result)
+
+	// 結果を構造体にパース
+	item := Item{}
+	err = dynamodbattribute.UnmarshalMap(result.Item, &item)
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       err.Error(),
+			StatusCode: 500,
+		}, err
+	}
+
+	fmt.Printf("item:%v", item)
+	fmt.Printf("item:%v", item.Cgg_id)
+
+	//itemからユーザー情報を取り出す
+	user := User{
+		CggId: item.Cgg_id,
+		Name:  item.Name,
+	}
+
+	//itemからサービス情報を取り出す
+	service := Service{
+		Deleted: item.Deleted,
+	}
+
+	fmt.Printf("user:%v", user)
+
+	// httpレスポンス作成
 	headers := map[string]string{
 		"Content-Type":                    "application/json",
 		"Access-Control-Allow-Origin":     "*", // こっちは小文字!
@@ -49,172 +130,25 @@ func handleRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProx
 		"Access-Control-Allow-Headers":    "Origin,Authorization,Accept,X-Requested-With",
 		"Access-Control-Allow-Credential": "true",
 	}
-	if err != nil {
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body:       err.Error(),
-			StatusCode: 500,
-		}, err
+	res := Response{
+		Service: service,
+		User:    user,
 	}
+	jsonBytes, _ := json.Marshal(res)
 
-	if req.Id == "" {
-		Response := struct {
-			ErrorMessage string `json:"errorMessage"`
-		}{
-			"idが必要です",
-		}
-		jsonResult, _ := json.Marshal(Response)
+	if user.CggId == "" {
 		return events.APIGatewayProxyResponse{
 			Headers:    headers,
-			Body:       string(jsonResult),
+			Body:       string(jsonBytes),
 			StatusCode: 404,
-		}, ErrNoId
+		}, nil
 	}
 
-	db, err := initDB()
-	if err != nil {
-		fmt.Println(err.Error())
-
-		Response := struct {
-			ErrorMessage string `json:"errorMessage"`
-		}{
-			"エラーです",
-		}
-		jsonResult, _ := json.Marshal(Response)
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body:       string(jsonResult),
-			StatusCode: 500,
-		}, err
-	}
-
-	cgg_id, err := getCggId(db, req.Id)
-	if err != nil {
-		fmt.Println(err.Error())
-		Response := struct {
-			ErrorMessage string `json:"errorMessage"`
-		}{
-			"データが見つかりません",
-		}
-		jsonResult, _ := json.Marshal(Response)
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body:       string(jsonResult),
-			StatusCode: 500,
-		}, err
-	}
-
-	deleted, err := getDeleted(db, req.Id)
-	if err != nil {
-		fmt.Println(err.Error())
-		Response := struct {
-			ErrorMessage string `json:"errorMessage"`
-		}{
-			"データが見つかりません",
-		}
-		jsonResult, _ := json.Marshal(Response)
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body:       string(jsonResult),
-			StatusCode: 500,
-		}, err
-	}
-
-	name, err := getName(db, req.Id)
-	if err != nil {
-		fmt.Println(err.Error())
-		Response := struct {
-			ErrorMessage string `json:"errorMessage"`
-		}{
-			"データが見つかりません",
-		}
-		jsonResult, _ := json.Marshal(Response)
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body:       string(jsonResult),
-			StatusCode: 500,
-		}, err
-	}
-	fmt.Println(*cgg_id, *name, *deleted)
-
-	Response := struct {
-		User    User    `json:"user"`
-		Service Service `json:"service"`
-	}{
-		User{
-			*cgg_id,
-			*name,
-		},
-		Service{
-			*deleted,
-		},
-	}
-	jsonResult, _ := json.Marshal(Response)
 	return events.APIGatewayProxyResponse{
 		Headers:    headers,
-		Body:       string(jsonResult),
-		StatusCode: 500,
+		Body:       string(jsonBytes),
+		StatusCode: 200,
 	}, nil
-}
-
-func initDB() (*sql.DB, error) {
-	dbName := os.Getenv("DB_DATABASE")
-	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASS")
-	hostName := os.Getenv("HOST_NAME")
-
-	d, err := sql.Open("postgres", fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", hostName, dbUser, dbPass, dbName))
-	if err != nil {
-		return nil, err
-	}
-
-	if err := d.Ping(); err != nil {
-		return nil, err
-	}
-
-	return d, nil
-}
-
-func getCggId(db *sql.DB, id string) (*string, error) {
-	var cgg_id string
-	sql := "SELECT cgg_id FROM users WHERE cgg_id = $1"
-	err := db.QueryRow(sql, id).Scan(&cgg_id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &cgg_id, nil
-}
-
-func getName(db *sql.DB, id string) (*string, error) {
-	var name string
-	sql := "SELECT name FROM users WHERE cgg_id = $1"
-	err := db.QueryRow(sql, id).Scan(&name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &name, nil
-}
-
-func getDeleted(db *sql.DB, id string) (*bool, error) {
-	var user_id int
-	var deleted bool
-
-	sql := "SELECT id FROM users WHERE cgg_id = $1"
-	err := db.QueryRow(sql, id).Scan(&user_id)
-	if err != nil {
-		return nil, err
-	}
-
-	s := strconv.Itoa(user_id)
-	sql = "SELECT deleted FROM service WHERE user_id = $1"
-	err = db.QueryRow(sql, s).Scan(&deleted)
-	if err != nil {
-		return nil, err
-	}
-
-	return &deleted, nil
 }
 
 func main() {
