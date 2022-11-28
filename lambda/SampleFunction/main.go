@@ -1,12 +1,15 @@
 package main
+
 import (
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
-	"encoding/json"
-	"github.com/aws/aws-lambda-go/lambda"
+
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 	_ "github.com/lib/pq"
 )
 
@@ -20,11 +23,11 @@ type User struct {
 }
 
 type Request struct {
-	Id	string `json:"id"`
+	Id string `json:"id"`
 }
 
 var (
-	ErrNoId = errors.New("No Id in HTTP response")
+	ErrNoId = errors.New("no id in HTTP response")
 )
 
 // JSONの形のテキストデータをgolangの構造体に変換するための関数
@@ -37,33 +40,33 @@ func ConvertInputDataToStruct(inputs string) (*Request, error) {
 	return &req, nil
 }
 
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handleRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	req, err := ConvertInputDataToStruct(request.Body)
 	headers := map[string]string{
-        "Content-Type":                    "application/json",
-        "Access-Control-Allow-Origin":     "*", // こっちは小文字!
-        "Access-Control-Allow-Methods":    "OPTIONS,POST,GET",
-        "Access-Control-Allow-Headers":    "Origin,Authorization,Accept,X-Requested-With",
-        "Access-Control-Allow-Credential": "true",
-    }
+		"Content-Type":                    "application/json",
+		"Access-Control-Allow-Origin":     "*", // こっちは小文字!
+		"Access-Control-Allow-Methods":    "OPTIONS,POST,GET",
+		"Access-Control-Allow-Headers":    "Origin,Authorization,Accept,X-Requested-With",
+		"Access-Control-Allow-Credential": "true",
+	}
 	if err != nil {
 		return events.APIGatewayProxyResponse{
 			Headers:    headers,
-			Body: err.Error(),
+			Body:       err.Error(),
 			StatusCode: 500,
 		}, err
 	}
 
-	if request.Id == "" {
+	if req.Id == "" {
 		Response := struct {
-			errorMessage string `json:"errorMessage"`
+			ErrorMessage string `json:"errorMessage"`
 		}{
 			"idが必要です",
 		}
 		jsonResult, _ := json.Marshal(Response)
 		return events.APIGatewayProxyResponse{
 			Headers:    headers,
-			Body: string(jsonResult),
+			Body:       string(jsonResult),
 			StatusCode: 404,
 		}, ErrNoId
 	}
@@ -73,85 +76,85 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		fmt.Println(err.Error())
 
 		Response := struct {
-			errorMessage string `json:"errorMessage"`
+			ErrorMessage string `json:"errorMessage"`
 		}{
 			"エラーです",
 		}
 		jsonResult, _ := json.Marshal(Response)
 		return events.APIGatewayProxyResponse{
 			Headers:    headers,
-			Body: string(jsonResult),
+			Body:       string(jsonResult),
 			StatusCode: 500,
 		}, err
 	}
 
-	cgg_id, err := getCggId(db, request.Id)
+	cgg_id, err := getCggId(db, req.Id)
 	if err != nil {
 		fmt.Println(err.Error())
 		Response := struct {
-			errorMessage string `json:"errorMessage"`
+			ErrorMessage string `json:"errorMessage"`
 		}{
 			"データが見つかりません",
 		}
 		jsonResult, _ := json.Marshal(Response)
 		return events.APIGatewayProxyResponse{
 			Headers:    headers,
-			Body: string(jsonResult),
-			StatusCode: 500,
-		}, err
-	}
-	
-	deleted, err := getDeleted(db, request.Id)
-	if err != nil {
-		fmt.Println(err.Error())
-		Response := struct {
-			errorMessage string `json:"errorMessage"`
-		}{
-			"データが見つかりません",
-		}
-		jsonResult, _ := json.Marshal(Response)
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body: string(jsonResult),
+			Body:       string(jsonResult),
 			StatusCode: 500,
 		}, err
 	}
 
-	name, err := getName(db, request.Id)
+	deleted, err := getDeleted(db, req.Id)
 	if err != nil {
 		fmt.Println(err.Error())
 		Response := struct {
-			errorMessage string `json:"errorMessage"`
+			ErrorMessage string `json:"errorMessage"`
 		}{
 			"データが見つかりません",
 		}
 		jsonResult, _ := json.Marshal(Response)
 		return events.APIGatewayProxyResponse{
 			Headers:    headers,
-			Body: string(jsonResult),
+			Body:       string(jsonResult),
+			StatusCode: 500,
+		}, err
+	}
+
+	name, err := getName(db, req.Id)
+	if err != nil {
+		fmt.Println(err.Error())
+		Response := struct {
+			ErrorMessage string `json:"errorMessage"`
+		}{
+			"データが見つかりません",
+		}
+		jsonResult, _ := json.Marshal(Response)
+		return events.APIGatewayProxyResponse{
+			Headers:    headers,
+			Body:       string(jsonResult),
 			StatusCode: 500,
 		}, err
 	}
 	fmt.Println(*cgg_id, *name, *deleted)
 
 	Response := struct {
-		User User `json:"user"`
+		User    User    `json:"user"`
 		Service Service `json:"service"`
 	}{
 		User{
-			fmt.Sprintf("%s",*cgg_id),
-			fmt.Sprintf("%s",*name),
+			*cgg_id,
+			*name,
 		},
 		Service{
 			*deleted,
 		},
 	}
 	jsonResult, _ := json.Marshal(Response)
-		return events.APIGatewayProxyResponse{
-			Headers:    headers,
-			Body: string(jsonResult),
-			StatusCode: 500,
-		}, nil
+	return events.APIGatewayProxyResponse{
+		Headers:    headers,
+		Body:       string(jsonResult),
+		StatusCode: 500,
+	}, nil
 }
 
 func initDB() (*sql.DB, error) {
@@ -171,7 +174,6 @@ func initDB() (*sql.DB, error) {
 
 	return d, nil
 }
-
 
 func getCggId(db *sql.DB, id string) (*string, error) {
 	var cgg_id string
@@ -205,7 +207,7 @@ func getDeleted(db *sql.DB, id string) (*bool, error) {
 		return nil, err
 	}
 
-	s:=strconv.Itoa(user_id)
+	s := strconv.Itoa(user_id)
 	sql = "SELECT deleted FROM service WHERE user_id = $1"
 	err = db.QueryRow(sql, s).Scan(&deleted)
 	if err != nil {
