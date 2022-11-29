@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       ];
       res.status(200).json(fixedData);
     } else if (response.status == 404) {
-      const emptyText = 'データが空です';
+      const emptyText = 'データが見つかりません';
       res.status(404).json({ errorMessage: emptyText });
     } else {
       const data: ErrorResponse = await response.json();
