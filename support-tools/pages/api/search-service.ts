@@ -26,10 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       body: JSON.stringify({ id: request.id }),
     });
-    if (response.status != 200) {
-      const data: ErrorResponse = await response.json();
-      res.status(response.status).json({ errorMessage: data.errorMessage });
-    } else {
+    if (response.status == 200) {
       const data: OKResponse = await response.json();
       const fixedData = [
         {
@@ -43,6 +40,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       ];
       res.status(200).json(fixedData);
+    } else if (response.status == 404) {
+      const emptyText = 'データが空です';
+      res.status(404).json({ errorMessage: emptyText });
+    } else {
+      const data: ErrorResponse = await response.json();
+      res.status(response.status).json({ errorMessage: data.errorMessage });
     }
   } catch (error: any) {
     console.log('ERROR', String(error));
