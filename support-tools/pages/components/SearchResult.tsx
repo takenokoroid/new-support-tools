@@ -1,4 +1,5 @@
 import { Item } from '../../type/lib';
+import Image from 'next/image';
 import css from '../../styles/SearchResult.module.css';
 const SearchResult = ({ result }: { result: Item }) => (
   <div className={`container mx-auto ${css.card__wrapper} md:flex flex-rows w-96`}>
@@ -37,7 +38,7 @@ const SearchResult = ({ result }: { result: Item }) => (
       >
         {result?.service.allowServiceSentence}
       </span>
-      <img alt={result?.service.allowServiceSentence} src={result?.service.allowServiceImage} />
+      <Image alt={result?.service.allowServiceSentence} src={result?.service.allowServiceImage} />
     </div>
   </div>
 );
