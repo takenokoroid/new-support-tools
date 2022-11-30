@@ -38,7 +38,12 @@ const SearchResult = ({ result }: { result: Item }) => (
       >
         {result?.service.allowServiceSentence}
       </span>
-      <Image alt={result?.service.allowServiceSentence} src={result?.service.allowServiceImage} />
+      <Image
+        width={20}
+        height={20}
+        alt={result?.service.allowServiceSentence}
+        src={result?.service.allowServiceImage}
+      />
     </div>
   </div>
 );
