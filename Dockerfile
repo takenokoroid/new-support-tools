@@ -3,6 +3,7 @@ FROM node:18-alpine
 WORKDIR /usr/src/app/next
 
 COPY /support-tools/package*.json ./
+COPY /support-tools/yarn.lock ./
 RUN set -eux; \
     apk add --no-cache --virtual build-dependencies wget unzip gnupg; \
     apk add --no-cache git bash openjdk11-jre curl musl-locales musl-locales-lang;
