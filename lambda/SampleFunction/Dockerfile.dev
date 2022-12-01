@@ -1,0 +1,9 @@
+# for local debug
+FROM public.ecr.aws/bitnami/golang:1.18 as build-image
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
+
+WORKDIR /go/src/app
+ADD ./ /go/src/app

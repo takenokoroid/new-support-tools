@@ -1,0 +1,86 @@
+openapi: "3.0.3"
+
+info:
+  title: "NewServiceTool API"
+  version: "1.0.0"
+
+paths:
+  "/api/v1/service":
+    post:
+      summary: "get service of sending user"
+      requestBody:
+        description: search service
+        content:
+          application/json:
+            schema:
+              required:
+                - id
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: 'FL0001'
+              required:
+                - id
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/user'
+                  service:
+                    $ref: '#/components/schemas/service'
+        "404":
+          description: "not found"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage: 
+                    type: string
+                    example: "データが見つかりません"
+        "422":
+          description: "not id"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage: 
+                    type: string
+                    example: "idが必要です"
+        "500":
+          description: "server error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage: 
+                  type: string
+                  example: 'エラーです'
+
+
+
+components:
+  schemas:
+    user:
+      type: object
+      properties:
+        cgg_id:
+          type: string
+          example: 'FL0001'
+        name:
+          type: string
+          example: 'testUser'
+    service:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+          example: false
