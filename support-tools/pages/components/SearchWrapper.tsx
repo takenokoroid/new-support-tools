@@ -16,7 +16,7 @@ const SearchWrapper = () => {
       {!errorStatus ? (
         results.map((result: Item) => <SearchResult key={result.user.cgg_id} result={result} />)
       ) : (
-        <>{errorMessage}</>
+        <div className='text-center mt-6'>{errorMessage}</div>
       )}
     </>
   );

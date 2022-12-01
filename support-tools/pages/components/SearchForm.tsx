@@ -21,7 +21,7 @@ const SearchForm = ({ userId, onIdChange, disabled, onSearch, validMessage }: Se
         検索
       </button>
     </div>
-    <span className='flex items-center font-medium tracking-wide text-red-500 mt-1 ml-1' role='alert'>
+    <span className='flex items-center font-medium tracking-wide text-red-500 mt-1 ml-1 h-4' role='alert'>
       {validMessage}
     </span>
   </div>
