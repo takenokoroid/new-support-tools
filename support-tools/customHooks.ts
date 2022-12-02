@@ -1,5 +1,14 @@
 import { ChangeEvent, useState } from 'react';
 import { Result } from 'type/lib';
+type OKResponse = {
+  user: {
+    cgg_id: string;
+    name: string;
+  };
+  service: {
+    deleted: boolean;
+  };
+};
 export const useSearch = () => {
   const [userId, setUserId] = useState('');
   const [disabled, setDisabled] = useState(true);
@@ -9,17 +18,29 @@ export const useSearch = () => {
   const [validMessage, setValidMessage] = useState('');
   const onSearch = async () => {
     try {
-      const response = await fetch('/api/search-service', {
+      const response = await fetch('http://swagger-api:10083/api/v1/service', {
         method: 'POST',
         body: JSON.stringify({
           id: userId,
         }),
       });
+      console.log(response)
       if (response.status === 200) {
-        const data: Result = await response.json();
+        const data: OKResponse = await response.json();
+        const fixedData = [
+          {
+            user: data.user,
+            service: {
+              allowServiceSentence: data.service.deleted ? '解除済み' : '利用中',
+              allowServiceImage: data.service.deleted
+                ? 'https://img.icons8.com/external-others-phat-plus/64/null/external-authentication-biometric-outline-others-phat-plus-2.png'
+                : 'https://img.icons8.com/external-others-phat-plus/64/null/external-authentication-biometric-outline-others-phat-plus.png',
+            },
+          },
+        ];
         setErrorMessage('');
         setErrorStatus(false);
-        setResults(data);
+        setResults(fixedData);
       } else {
         const data = await response.json();
         setErrorMessage(data.errorMessage);
