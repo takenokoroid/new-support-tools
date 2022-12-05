@@ -8,7 +8,8 @@ services:
     volumes:
       - ./support-tools:/usr/src/app/next
       - /usr/src/app/next/node_modules
-    command: yarn dev
+    # command: yarn dev
+    command: yarn run build
 
   sample-function:
     tty: true

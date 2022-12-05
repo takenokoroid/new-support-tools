@@ -18,13 +18,17 @@ export const useSearch = () => {
   const [validMessage, setValidMessage] = useState('');
   const onSearch = async () => {
     try {
-      const response = await fetch('http://swagger-api:10083/api/v1/service', {
+      const response = await fetch('https://mk973d5m18.execute-api.ap-northeast-1.amazonaws.com/test_frontend/aa', {
         method: 'POST',
+        mode: 'cors',
+        headers: {
+          Accept: 'application/json',
+          'Content-type': 'application/json',
+        },
         body: JSON.stringify({
           id: userId,
         }),
       });
-      console.log(response)
       if (response.status === 200) {
         const data: OKResponse = await response.json();
         const fixedData = [
